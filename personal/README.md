@@ -107,6 +107,15 @@ The one-minute calculation threshold and income accounting are unchanged. The co
 rate label can shrink and wrap, and Session uses a smaller font for placeholders; both text and
 font update through the optimized Vue block when the real rate becomes available.
 
+Personal 1.2 validation on 2026-11-20: personal Node20, Python11 and app4 tests passed;
+typecheck, app build and the 0.2.64-based installer passed. Independent review found no findings.
+The packaged archive changed only the three allowed original JS entrypoints and preserved all
+78 original helper files. Installed archive hash matched the package; settings and collection
+bytes and complete income totals matched the pre-update backup, with SQLite `quick_check=ok`.
+The app restarted and the English Kina navigation label was observed. Native UI automation
+could not activate the panel to open the tab; placeholder text/class transitions were verified
+with the optimized Vue test, while full live HUD wrapping remains a manual visual check.
+
 Recovery: stop the patched app, restore the original program directory, keep the current profile
 and `personal-kina` directory. Do not restore an older collection over new play progress.
 The original app ignores the new database. Keep automatic updates off until a new base has been
