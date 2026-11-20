@@ -67,6 +67,16 @@ stored icon toggle, or add income. It ends even if a window throttles broadcast 
 then resumes any real active alerts (or the normal Nyerk icon). Soul pulses do not replace the
 image node during preview or real alerts. Preview accepts no event IDs or other parameters.
 
+Personal 1.1 validation on 2026-11-20: Node17, Python11 and original app4 tests passed;
+typecheck, original app build and the 0.2.64-based installer build passed. A fresh independent
+review found no actionable findings. Package comparison preserved all 78 original helper files
+and all original archive files except the three expected JS entrypoints. Installation retained
+settings, collection and complete income totals; the installed archive matched the package.
+Live screenshots at approximately 0, 3, 6, 9 and 12 seconds showed Kaira, Shugo, Kaira, Shugo,
+then the original Nyerk icon. This verifies the two-item preview through the actual installed
+bubble, rather than only the queue unit test. It is a silent simulation, not a claim that those
+two game events were actually scheduled together. No raw player data or captures are committed.
+
 Tests:
 
 ```powershell
