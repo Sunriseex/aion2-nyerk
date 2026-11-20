@@ -13,6 +13,12 @@ two explicitly allowed core bridge channels supply the bubble's configuration an
 No generic IPC access, remote code, new network connection, game memory access or game input
 is introduced.
 
+The existing `tracker:kina` object keeps its ordinary-session fields and adds `bound` (a second
+session) and `boundActive` (reader availability). Existing addon consumers still receive the
+ordinary fields. `personal:get` is read-only and restricted to original core renderer main frames;
+`personal:state` supplies only icon mappings and the icon toggle. The Personal Kina addon uses
+its existing authenticated SDK `send` route for `refresh` and a boolean-only `config` request.
+
 Build (Windows, after installing the repo's existing app dependencies and generating its icon):
 
 ```powershell
@@ -56,3 +62,16 @@ Recovery: stop the patched app, restore the original program directory, keep the
 and `personal-kina` directory. Do not restore an older collection over new play progress.
 The original app ignores the new database. Keep automatic updates off until a new base has been
 reviewed and patched; this patcher intentionally rejects any unrecognized archive.
+
+Validation on 2026-11-20: independent review of `a40519b..ee0b971` verified the four corrected
+findings and reran Node (14 passed) and Python (11 passed). The final installer built successfully.
+Comparison of all 1,455 original archive files found only the three intended JS entrypoints
+changed; all 78 original tracker-helper files matched byte-for-byte. Installed archive hash
+matched the packaged archive. The user's current profile and collection were preserved at
+installation; only the new addon was enabled, with automatic updates already off.
+
+Live Global validation confirmed bound income attributed to a character/server, the working
+history tab, and continued income after a forced-stop/relaunch with committed totals intact.
+SQLite `quick_check` returned `ok`. Active multi-alert image rotation and positive ordinary-Kina
+income have automated coverage but no live observation yet. The user confirmed the history
+table appears. A live character-switch check remains pending user participation.
