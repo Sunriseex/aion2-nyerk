@@ -1,5 +1,7 @@
 # Review contract
 
+For the 0.2.64 local extension, also read [personal/README.md](personal/README.md). Run its Node and Python test commands and `node personal/build.mjs <original-program-folder> --installer`. Verify that the original four addon directories and every original sidecar file are byte-for-byte unchanged in the package. Only main, preload and the single renderer JS bundle may change among original app files. Do not commit original binaries, extracted third-party bundles, profiles, databases or captures. Review new IPC sender checks, addon isolation, transaction rollback, retry/deduplication, unknown-character attribution, replay isolation, and recovery preserving new collection progress.
+
 Validate the Kina packet parser with `.venv/Scripts/python -m pytest tests/test_kina.py`.
 From `app/`, run `npm test`, `npm run typecheck`, then `npm run build`.
 

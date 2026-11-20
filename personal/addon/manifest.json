@@ -1,0 +1,11 @@
+{
+  "id": "personal-kina",
+  "name": "Personal Kina",
+  "version": "1.0.0",
+  "author": "Sunriseex",
+  "description": "Отдельные валюты и локальная история дохода привязанной кины по персонажам.",
+  "nyerk": "^1.5",
+  "sidecar": "reader.py",
+  "tab": { "label": "Кина", "page": "tab.html", "icon": "icon.svg" },
+  "permissions": []
+}
