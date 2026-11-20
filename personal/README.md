@@ -64,6 +64,15 @@ calendar icon, as on https://aion2.gg/tools/event-timer/resets. These are client
 reused for notification categories; distinct native daily-reset and weekly-reset icons have not
 been confirmed. Their existing tooltip names distinguish the two reset types.
 
+Personal 1.1.1 validation on 2026-11-20: personal Node18, Python11 and app4 tests passed;
+typecheck, app build and the original-0.2.64-based installer passed. Independent review confirmed
+the new assets' client filenames, hashes, mappings and unchanged runtime boundaries. All ten
+mapped images matched their manifest hashes inside the final package; all 78 original helper
+files were unchanged and only the three expected original JS entrypoints differed. The installed
+archive matched the package. Settings, collection and all income totals were preserved at
+installation; SQLite `quick_check` passed. The new image files were visually inspected. Actual
+merchant and reset alert times were not awaited for this asset-only update.
+
 The Kina tab's **Тест: босс + ивент** button, or a second launch with `--personal-preview`, starts
 a 12-second silent visual preview: Kaira, Shugo, Kaira, Shugo, each for three seconds. Its tooltip
 says `ТЕСТ`. Preview does not broadcast timer alerts, change real dismissal state, change the
