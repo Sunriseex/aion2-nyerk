@@ -4,7 +4,8 @@ import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
-import { AlertQueue, ratesText, boundCard } from '../renderer.mjs'
+import { AlertQueue, ratesText, boundCard, iconAlerts } from '../renderer.mjs'
+import { createHash } from 'node:crypto'
 import { createRenderer, openBlock, createElementBlock, createElementVNode } from '../../app/node_modules/vue/dist/vue.runtime.esm-bundler.js'
 import { patchMain, patchRenderer, replaceOnce } from '../build.mjs'
 const require = createRequire(import.meta.url)
@@ -69,11 +70,11 @@ test('corrupt database is rejected without replacing its contents', () => tempor
 }))
 
 function runtimeFixture(dir) {
-  const ipc = new Map(), hooks = new Map(), state = { latest: null }
+  const ipc = new Map(), hooks = new Map(), state = { latest: null, broadcasts: [] }
   const app = { getPath: () => dir, on: (name, fn) => hooks.set(name, fn) }
   const runtime = createPersonal({ app, ipcMain: { handle: (name, fn) => ipc.set(name, fn) },
     rendererFile: resolve(dir, 'out/renderer/index.html'), timers: () => [{ id: 'gartua', name: 'Gartua', schedule: { kind: 'boss', boss: 101021 } }], setKina: s => state.latest = s,
-    publish: () => {}, broadcast: () => {} })
+    publish: () => {}, broadcast: (channel, payload) => state.broadcasts.push({ channel, payload }) })
   runtime.start()
   runtime.accept({ type: 'addonLoaded', addon: 'personal-kina' })
   return { runtime, state, close: () => hooks.get('before-quit')(), ipc }
@@ -190,6 +191,50 @@ test('alert queue rotates every three seconds, keeps position on additions, and 
   assert.equal(q.select([], 6500), null)
   assert.equal(q.select([a], 7000), a)
 })
+test('simultaneous Kaira and Shugo preview rotates twice, expires, and restores real alerts', () => {
+  const real = [{ id: 'invasion', at: 50000 }]
+  const state = { config: { bubbleIcons: true }, preview: { expiresAt: 12000, alerts: [{ id: 'kaira', at: 20000 }, { id: 'shugo', at: 20000 }] } }
+  const queue = new AlertQueue()
+  for (const [now, expected] of [[0, 'kaira'], [2999, 'kaira'], [3000, 'shugo'], [5999, 'shugo'], [6000, 'kaira'], [9000, 'shugo'], [12000, 'invasion']]) {
+    assert.equal(queue.select(iconAlerts(real, state, now), now).id, expected)
+  }
+  assert.deepEqual(real, [{ id: 'invasion', at: 50000 }])
+  state.config.bubbleIcons = false
+  assert.deepEqual(iconAlerts(real, state, 13000), [])
+  assert.equal(iconAlerts(real, state, 1).length, 2, 'explicit preview does not change the stored toggle')
+})
+test('preview request does not change history, rates, configuration, or publish a real timer alert', () => temporary(dir => {
+  const f = runtimeFixture(dir), before = f.runtime.snapshot(), originalNow = Date.now
+  let now = originalNow()
+  Date.now = () => now
+  try {
+    f.runtime.request('preview')
+    const during = f.runtime.snapshot()
+    assert.deepEqual(during.preview.alerts.map(a => a.id), ['kaira', 'shugo'])
+    assert.deepEqual(during.history, before.history)
+    assert.deepEqual(during.config, before.config)
+    assert.deepEqual(during.earned, before.earned)
+    assert.ok(f.state.broadcasts.every(event => event.channel === 'personal:state'))
+    assert.equal(during.preview.expiresAt, now + 12000)
+    assert.throws(() => f.runtime.request('preview', { id: 'arbitrary-event' }), /does not accept/)
+    now += 12000
+    assert.equal(f.runtime.snapshot().preview, null)
+  } finally { Date.now = originalNow; f.close() }
+}))
+test('client icons have pinned hashes, WebP images, game resource identifiers and matching local URLs', () => {
+  const manifest = JSON.parse(readFileSync(new URL('../game-icons.json', import.meta.url)))
+  assert.equal(Object.keys(manifest.icons).length, 7)
+  for (const [id, asset] of Object.entries(manifest.icons)) {
+    const bytes = readFileSync(new URL(`../assets/icons/${id}.webp`, import.meta.url))
+    assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256)
+    assert.equal(bytes.toString('ascii', 8, 12), 'WEBP')
+    assert.equal(asset.file, `personal-icons/${id}.webp`)
+    assert.ok(asset.source.startsWith('https://'))
+    assert.ok(asset.registryKey)
+  }
+  assert.equal(manifest.icons.shugo.registryKey, 'menu.FieldEvent')
+  assert.equal(manifest.icons.invasion.registryKey, 'fieldevent.DimensionInvasion')
+})
 test('independent rates render while ordinary currency is idle', () => {
   assert.equal(ratesText({ earned: 0, bound: { earned: 1000, activeMs: 60000, lastAt: 60000 } }, 60000), 'Kina/h 0 · Bound/h 60.0k')
 })
@@ -201,5 +246,5 @@ test('patcher refuses ambiguous inputs and preserves the original DPS, custom so
   const patched = patchMain(original)
   for (const text of ['async function pickSound(', 'function setAddonHudHover(', 'function moveKillFeedToHud(', 'customSounds']) assert.ok(patched.includes(text), text)
   const renderer = patchRenderer(readFileSync(join(base, 'renderer/assets/index-D0Azwfnj.js'), 'utf8'))
-  for (const text of ['customSounds[v.id]', 'personalIcon.value.src', 'boundCard(c,t.kina,personalNow.value)', '__name:"SessionTab"']) assert.ok(renderer.includes(text), text)
+  for (const text of ['customSounds[v.id]', 'personalIcon.value.src', 'key:personalIcon.value.active?"personal-alert":o.value', 'boundCard(c,t.kina,personalNow.value)', '__name:"SessionTab"']) assert.ok(renderer.includes(text), text)
 })

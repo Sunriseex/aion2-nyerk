@@ -19,6 +19,7 @@ var personal = require('../personal/runtime.cjs').createPersonal({
   publish: data => { for (const fn of addonLineListeners) fn({type:'addon', addon:'personal-kina', name:'stats', data}); }
 });`)
   s = replaceOnce(s, 'void electron2.app.whenReady().then(() => {', 'void electron2.app.whenReady().then(() => {\n    personal.start();')
+  s = replaceOnce(s, 'electron2.app.on("second-instance", () => showPanel());', 'electron2.app.on("second-instance", (_event, argv) => { if (argv.includes("--personal-preview")) personal.request("preview"); else showPanel(); });')
   s = replaceOnce(s, '  switch (ev["type"]) {\n    case "addon":\n    case "addonLoaded":', '  if (personal.accept(ev)) return;\n  switch (ev["type"]) {\n    case "addon":\n    case "addonLoaded":')
   s = replaceOnce(s, '  const args = [...cmd.args, "--data", data];', '  personal.helperStarting();\n  const args = [...cmd.args, "--data", data];')
   s = replaceOnce(s, 'setKina({ ...NO_KINA, balance: kina.balance, gains: [] });', 'personal.resetSession();')
@@ -34,7 +35,7 @@ export function patchRenderer(source) {
     '__name:"BubblePage",setup(e){const t=Ne(),personalIcon=personalBubble(t,te,U,De,tt,Ve,ae,fr),n=U(()=>Ql(t.status))')
   s = replaceOnce(s, 't.alerting.length?"A timer is up: click to see it":', 'personalIcon.value.title?personalIcon.value.title:')
   s = replaceOnce(s, 'key:o.value,src:fr,alt:"",draggable:"false",class:oe(["size-12 rounded-full",o.value&&"animate-soul"])},null,2)',
-    'key:t.alerting.length?"personal-alert":o.value,src:personalIcon.value.src,onError:()=>personalIcon.value.failed(),alt:"",draggable:"false",class:oe(["size-12 rounded-full",!t.alerting.length&&o.value&&"animate-soul"])},null,10,["src"])')
+    'key:personalIcon.value.active?"personal-alert":o.value,src:personalIcon.value.src,onError:()=>personalIcon.value.failed(),alt:"",draggable:"false",class:oe(["size-12 rounded-full",!personalIcon.value.active&&o.value&&"animate-soul"])},null,10,["src"])')
   s = replaceOnce(s, '__name:"HudPage",setup(e){const t=Ne(),n=te(null)', '__name:"HudPage",setup(e){const t=Ne(),personalNow=personalClock(te,Ve),n=te(null)')
   s = replaceOnce(s, 's.value.kina?t.kinaRate!==null?`${ws(t.kinaRate)} Kina/h`:t.kina.earned?"Kina/h measuring…":null:null',
     's.value.kina?ratesText(t.kina,personalNow.value):null')
@@ -58,12 +59,18 @@ export function stage(baseDirectory, output) {
   patch('out/renderer/assets/index-D0Azwfnj.js', patchRenderer)
   patch('out/preload/index.js', s => replaceOnce(replaceOnce(s, 'var INVOKE_CHANNELS = [', 'var INVOKE_CHANNELS = ["personal:get",'), 'var EVENT_CHANNELS = [', 'var EVENT_CHANNELS = ["personal:state",'))
   mkdirSync(join(output, 'out/personal'), { recursive: true })
-  for (const file of ['runtime.cjs', 'ledger.cjs']) cpSync(join(ROOT, 'personal', file), join(output, 'out/personal', file))
+  for (const file of ['runtime.cjs', 'ledger.cjs', 'game-icons.json']) cpSync(join(ROOT, 'personal', file), join(output, 'out/personal', file))
   cpSync(join(ROOT, 'personal/renderer.mjs'), join(output, 'out/renderer/assets/personal-renderer.mjs'))
   cpSync(join(ROOT, 'personal/addon'), join(output, 'out/addons/personal-kina'), {
     recursive: true, filter: path => !path.includes('__pycache__') && !path.endsWith('.pyc'),
   })
   const icons = join(output, 'out/renderer/personal-icons'); mkdirSync(icons, { recursive: true })
+  const assets = JSON.parse(readFileSync(join(ROOT, 'personal/game-icons.json'), 'utf8')).icons
+  for (const [id, asset] of Object.entries(assets)) {
+    const file = join(ROOT, 'personal/assets/icons', `${id}.webp`)
+    if (createHash('sha256').update(readFileSync(file)).digest('hex') !== asset.sha256) throw new Error(`Game icon integrity mismatch: ${id}`)
+    cpSync(file, join(icons, `${id}.webp`))
+  }
   const drawings = {
     event: '<path d="M16 14v10m0 3v1"/><circle cx="16" cy="16" r="12"/>',
     merchant: '<path d="M7 11h18l-2 16H9zM11 11V8a5 5 0 0 1 10 0v3"/>',
@@ -94,7 +101,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       directories: { output: join(ROOT, 'build/personal-installer'), buildResources: join(ROOT, 'app/build') },
       files: ['**/*'], extraResources: [{ from: join(base, 'resources/sidecar'), to: 'sidecar' }], asar: true, electronLanguages: ['en-US'],
       win: { target: ['nsis'], icon: join(ROOT, 'app/build/icon.ico') },
-      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.0.0.exe' },
+      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.1.0.exe' },
       publish: { provider: 'generic', url: 'https://nyerk.app/updates/', channel: 'latest' },
     } })
   }

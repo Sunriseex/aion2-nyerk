@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head><meta charset="utf-8"><link rel="stylesheet" href="/_nyerk/nyerk.css"><link rel="stylesheet" href="tab.css"></head>
 <body><main>
-  <header><h1>Кина <small>0.2.64 + Personal 1.0</small></h1><p id="status" role="status">Подключение к счётчику…</p></header>
+  <header><h1>Кина <small>0.2.64 + Personal 1.1</small></h1><p id="status" role="status">Подключение к счётчику…</p></header>
   <section class="rates" aria-label="Доход за сессию"><div><span>Обычная / час</span><strong id="unbound">0</strong></div><div><span>Привязанная / час</span><strong id="bound">0</strong></div></section>
   <h2>Получено привязанной кины</h2>
   <nav aria-label="Период"><button type="button" data-period="total" aria-pressed="true">Всё время</button><button type="button" data-period="days7" aria-pressed="false">7 дней</button><button type="button" data-period="days30" aria-pressed="false">30 дней</button></nav>
@@ -11,4 +11,5 @@
   <p id="started" class="muted"></p>
   <p class="muted">Все поступления, включая награды и задания. Траты не вычитаются. 7 и 30 дней — последние 168 и 720 часов. Доход при выключенном Nyerk не учитывается. Сброс Session не удаляет эту историю.</p>
   <label class="setting"><input id="icons" type="checkbox" checked> Иконки событий в кружке</label><p class="muted">Активные уведомления сменяют друг друга каждые 3 секунды.</p>
+  <button id="preview" type="button">Тест: босс + ивент</button><p class="muted" id="preview-status" role="status">Покажет Kaira и Shugo по очереди в течение 12 секунд. Без звука; реальные таймеры и статистика не изменятся.</p>
 </main><script src="/_nyerk/nyerk.js"></script><script src="tab.js"></script></body></html>

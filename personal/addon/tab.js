@@ -33,5 +33,9 @@ el('icons').addEventListener('change', async () => {
   catch (error) { el('status').textContent = `Не удалось сохранить настройку: ${error.message}`; el('icons').checked = current?.config.bubbleIcons ?? true }
   finally { el('icons').disabled = false }
 })
+el('preview').addEventListener('click', async () => {
+  try { await nyerk.send('preview'); el('preview-status').textContent = 'Тест запущен: Kaira → Shugo, каждые 3 секунды. Через 12 секунд вернутся обычные уведомления.' }
+  catch (error) { el('preview-status').textContent = `Не удалось запустить тест: ${error.message}` }
+})
 nyerk.on('stats', data => { current = data; render() })
 nyerk.ready.then(() => nyerk.send('refresh')).catch(error => { el('status').textContent = error.message })

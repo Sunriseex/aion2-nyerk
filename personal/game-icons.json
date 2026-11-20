@@ -1,0 +1,68 @@
+{
+  "credit": "Game images belong to NCSOFT. Sources: Questlog and Aion2.gg client-data databases.",
+  "icons": {
+    "shugo": {
+      "file": "personal-icons/shugo.webp",
+      "source": "https://aion2.gg/tools/event-timer",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc0e4539968aef99aa2c6e1e62b0d7d3e02ebb884c",
+      "registryKey": "menu.FieldEvent",
+      "originalFilename": "inline; filename=\"icons-registry/UT_HUD_Btn_Menu_FieldEvent_Sprite.webp\"; filename*=UTF-8''icons-registry%2FUT_HUD_Btn_Menu_FieldEvent_Sprite.webp",
+      "sha256": "0e4539968aef99aa2c6e1e62b0d7d3e02ebb884cc7dade36927a8858d79c715d",
+      "bytes": 6856
+    },
+    "invasion": {
+      "file": "personal-icons/invasion.webp",
+      "source": "https://aion2.gg/tools/event-timer",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc79cd3553240767589765b78e2f7921cbe83cb7de",
+      "registryKey": "fieldevent.DimensionInvasion",
+      "originalFilename": "inline; filename=\"icons-registry/UT_FieldEvent_Icon_Beritra.webp\"; filename*=UTF-8''icons-registry%2FUT_FieldEvent_Icon_Beritra.webp",
+      "sha256": "79cd3553240767589765b78e2f7921cbe83cb7deb50f59307551ee2ae48b71d1",
+      "bytes": 3402
+    },
+    "rift": {
+      "file": "personal-icons/rift.webp",
+      "source": "https://aion2.gg/tools/event-timer",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc52f5a944b4e3b2a1af0ae62b33cb3cf901536236",
+      "registryKey": "content.Rift",
+      "originalFilename": "inline; filename=\"a2-ui-kit.nav-rift.webp\"; filename*=UTF-8''a2-ui-kit.nav-rift.webp",
+      "sha256": "52f5a944b4e3b2a1af0ae62b33cb3cf901536236aad1dec21629835d47c1514c",
+      "bytes": 3506
+    },
+    "siege": {
+      "file": "personal-icons/siege.webp",
+      "source": "https://aion2.gg/tools/event-timer",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qcd5d6dcb2c2d689520e388399bca6b6b6a8666d3f",
+      "registryKey": "content.AbyssArtifact",
+      "originalFilename": "inline; filename=\"a2-ui-kit.nav-abyssartifact.webp\"; filename*=UTF-8''a2-ui-kit.nav-abyssartifact.webp",
+      "sha256": "d5d6dcb2c2d689520e388399bca6b6b6a8666d3f3ef8c65bb7d91ad6cfcd847d",
+      "bytes": 4130
+    },
+    "siegeBosses": {
+      "file": "personal-icons/siegeBosses.webp",
+      "source": "https://aion2.gg/tools/event-timer",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc316c2dfc0a77b7c6f11fe5f22cbbfa73f4bc155c",
+      "registryKey": "mapicon.LegendMonster",
+      "originalFilename": "inline; filename=\"icons-registry/UT_Marker_Monster_Boss_Aggressive.webp\"; filename*=UTF-8''icons-registry%2FUT_Marker_Monster_Boss_Aggressive.webp",
+      "sha256": "316c2dfc0a77b7c6f11fe5f22cbbfa73f4bc155cc5a32f68b84008105d5e44a9",
+      "bytes": 5362
+    },
+    "kaira": {
+      "file": "personal-icons/kaira.webp",
+      "source": "https://questlog.gg/aion-2/en/map",
+      "url": "https://cdn.questlog.gg/aion-2/assets/Game/UI/Resource/Texture/Portrait/Portrait_256/UT_256_MOB_BeritraD_01.webp",
+      "registryKey": "/assets/Game/UI/Resource/Texture/Portrait/Portrait_256/UT_256_MOB_BeritraD_01.UT_256_MOB_BeritraD_01",
+      "originalFilename": null,
+      "sha256": "813c0a6c028d7dde00a24195f2bce252ec53c5947aa6e0d1a66f53217fe1b796",
+      "bytes": 14164
+    },
+    "nahma": {
+      "file": "personal-icons/nahma.webp",
+      "source": "https://questlog.gg/aion-2/en/map",
+      "url": "https://cdn.questlog.gg/aion-2/assets/Game/UI/Resource/Texture/Portrait/Portrait_256/UT_256_MOB_AbBoss_01.webp",
+      "registryKey": "/assets/Game/UI/Resource/Texture/Portrait/Portrait_256/UT_256_MOB_AbBoss_01.UT_256_MOB_AbBoss_01",
+      "originalFilename": null,
+      "sha256": "7f44d8328198795c02e153f17fa4979039379b80740037e800ebcab38270a055",
+      "bytes": 22768
+    }
+  }
+}

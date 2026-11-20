@@ -41,11 +41,15 @@ export class AlertQueue {
     return index < 0 ? null : sorted[index]
   }
 }
+export function iconAlerts(realAlerts, state, now) {
+  if (state.preview && state.preview.expiresAt > now) return state.preview.alerts
+  return state.config.bubbleIcons ? realAlerts : []
+}
 export function personalBubble(store, ref, computed, watch, mounted, dispose, bridge, normalIcon) {
   const state = ref({ config: { bubbleIcons: true }, icons: [] })
   const selected = ref(null), failed = new Set(), queue = new AlertQueue()
   let timer, off
-  const tick = () => { selected.value = queue.select(state.value.config.bubbleIcons ? store.alerting : [], Date.now()) }
+  const tick = () => { selected.value = queue.select(iconAlerts(store.alerting, state.value, Date.now()), Date.now()) }
   mounted(() => {
     off = bridge().on('personal:state', data => { state.value = data; tick() })
     bridge().invoke('personal:get').then(data => { state.value = data; tick() }).catch(() => {})
@@ -56,9 +60,10 @@ export function personalBubble(store, ref, computed, watch, mounted, dispose, br
   dispose(() => { off?.(); clearInterval(timer) })
   return computed(() => {
     const alert = selected.value
+    const alerts = iconAlerts(store.alerting, state.value, Date.now())
     const def = state.value.icons.find(i => i.id === alert?.id)
     const src = alert ? (failed.has(def?.src) ? 'personal-icons/event.svg' : def?.src ?? 'personal-icons/event.svg') : normalIcon
-    return { src, title: alert ? `${def?.name ?? alert.id} · ${new Date(alert.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${store.alerting.length} уведомл. — нажмите, чтобы открыть` : null,
+    return { src, active: Boolean(alert), title: alert ? `${state.value.preview?.expiresAt > Date.now() ? 'ТЕСТ · ' : ''}${def?.name ?? alert.id} · ${new Date(alert.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${alerts.length} уведомл. — нажмите, чтобы открыть` : null,
       failed: () => { if (def?.src && !failed.has(def.src)) { failed.add(def.src); state.value = { ...state.value } } } }
   })
 }

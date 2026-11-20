@@ -4,6 +4,7 @@ const { join } = require('node:path')
 const { pathToFileURL } = require('node:url')
 const { randomUUID } = require('node:crypto')
 const { Ledger } = require('./ledger.cjs')
+const gameIcons = require('./game-icons.json').icons
 
 const blank = () => ({ balance: null, earned: 0, activeMs: 0, lastAt: null, gains: [] })
 function update(s, balance, now) {
@@ -23,6 +24,7 @@ function createPersonal(api) {
   let state = { ...blank(), bound: blank() }, identity = null, epoch = randomUUID(), seq = 0
   const pending = []
   let config = { bubbleIcons: true }
+  let preview = null
   let timer, lastPrune = 0
   function flush() {
     if (!persistence) return
@@ -36,14 +38,15 @@ function createPersonal(api) {
   }
   function icons() {
     return api.timers().map(t => ({ id: t.id, name: t.name,
-      src: t.schedule.kind === 'boss' ? `bosses/${t.schedule.boss}.webp` : `personal-icons/${t.id}.svg` }))
+      src: gameIcons[t.id]?.file ?? (t.schedule.kind === 'boss' ? `bosses/${t.schedule.boss}.webp` : `personal-icons/${t.id}.svg`) }))
   }
   function snapshot() {
+    if (preview && Date.now() >= preview.expiresAt) preview = null
     flush()
     let history = null
     try { if (ledger) history = ledger.snapshot(Date.now()) }
     catch (err) { error = `История недоступна: ${err.message}` }
-    return { version: '1.0.0', base: '0.2.64', history, error, pending: pending.length, replay: !persistence,
+    return { version: '1.1.0', base: '0.2.64', history, error, pending: pending.length, replay: !persistence, preview,
       config, icons: icons(), identity, lastSeen, readerActive, readerError,
       rates: { unbound: rate(state, Date.now()), bound: readerActive ? rate(state.bound, Date.now()) : null },
       earned: { unbound: state.earned, bound: state.bound.earned } }
@@ -51,7 +54,7 @@ function createPersonal(api) {
   function publish() {
     const data = snapshot()
     api.publish(data)
-    api.broadcast('personal:state', { config: data.config, icons: data.icons })
+    api.broadcast('personal:state', { config: data.config, icons: data.icons, preview: data.preview })
   }
   function rebase() {
     state = { ...state, balance: null, bound: { ...state.bound, balance: null } }
@@ -100,7 +103,7 @@ function createPersonal(api) {
         const frame = event.senderFrame
         const url = new URL(frame?.url ?? 'about:blank')
         if (frame !== event.sender.mainFrame || url.protocol !== 'file:' || url.pathname !== expected) throw new Error('Unauthorized personal view')
-        return { config, icons: icons(), version: '1.0.0' }
+        return { config, icons: icons(), version: '1.1.0', preview }
       })
       timer = setInterval(publish, 5000); timer.unref()
       api.app.on('before-quit', () => { clearInterval(timer); flush(); ledger?.close() })
@@ -118,7 +121,11 @@ function createPersonal(api) {
       sendState(); publish()
     },
     request(name, data) {
-      if (name === 'config') {
+      if (name === 'preview') {
+        if (data !== undefined && data !== null) throw new Error('Preview does not accept parameters')
+        const now = Date.now()
+        preview = { expiresAt: now + 12_000, alerts: [{ id: 'kaira', at: now + 300_000 }, { id: 'shugo', at: now + 300_000 }] }
+      } else if (name === 'config') {
         if (!data || typeof data.bubbleIcons !== 'boolean') throw new Error('Invalid icon setting')
         const next = { bubbleIcons: data.bubbleIcons }
         writeFileSync(join(directory, 'config.json.part'), JSON.stringify(next))

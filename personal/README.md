@@ -16,8 +16,9 @@ is introduced.
 The existing `tracker:kina` object keeps its ordinary-session fields and adds `bound` (a second
 session) and `boundActive` (reader availability). Existing addon consumers still receive the
 ordinary fields. `personal:get` is read-only and restricted to original core renderer main frames;
-`personal:state` supplies only icon mappings and the icon toggle. The Personal Kina addon uses
-its existing authenticated SDK `send` route for `refresh` and a boolean-only `config` request.
+`personal:state` supplies icon mappings, the icon toggle and an optional expiring preview. The
+Personal Kina addon uses its existing authenticated SDK `send` route for `refresh`, a boolean-only
+`config` request and a parameterless `preview` request.
 
 Build (Windows, after installing the repo's existing app dependencies and generating its icon):
 
@@ -25,7 +26,7 @@ Build (Windows, after installing the repo's existing app dependencies and genera
 node personal/build.mjs 'C:\path\to\original-0.2.64-program' --installer
 ```
 
-The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.0.0.exe`.
+The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.1.0.exe`.
 The installer itself never deletes user data. Stop Nyerk, back up its program and current profile,
 enable `addons.enabled.personal-kina` in the preserved settings, and keep `autoUpdateCheck=false`.
 Leave other addon choices unchanged, including the built-in DPS Meter. Launch the installed
@@ -49,6 +50,22 @@ in UTC milliseconds. Seven and thirty days mean 168 and 720 hours, independent o
 Multiple event icons rotate every three seconds using the existing active alert list. Existing
 sound and dismissal behavior is unchanged. Boss portraits come from the original app's assets;
 local pictograms cover periodic events and missing portraits. No network image fetch is needed.
+
+Personal 1.1 bundles client images for Shugo Festival, Dimensional Invasion, Rift, Artifact Siege,
+the general field-boss symbol, Watcher Kaira and Guardian Lord Nahma. `game-icons.json` records
+source pages, client resource identifiers, download URLs and SHA-256 hashes. `fetch-icons.mjs`
+refreshes only these seven known images; the build verifies their hashes before packaging.
+Game artwork belongs to NCSOFT. Event images come from Aion2.gg's client-asset registry
+(https://aion2.gg/about/data), and NPC portraits from Questlog's game database
+(https://questlog.gg/aion-2/en/map). Merchant/reset alerts keep the existing local pictograms
+until exact matching game assets are identified.
+
+The Kina tab's **Тест: босс + ивент** button, or a second launch with `--personal-preview`, starts
+a 12-second silent visual preview: Kaira, Shugo, Kaira, Shugo, each for three seconds. Its tooltip
+says `ТЕСТ`. Preview does not broadcast timer alerts, change real dismissal state, change the
+stored icon toggle, or add income. It ends even if a window throttles broadcast updates, and
+then resumes any real active alerts (or the normal Nyerk icon). Soul pulses do not replace the
+image node during preview or real alerts. Preview accepts no event IDs or other parameters.
 
 Tests:
 
