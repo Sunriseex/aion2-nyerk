@@ -8,6 +8,7 @@ import { AlertQueue, ratesText, boundCard, iconAlerts } from '../renderer.mjs'
 import { createHash } from 'node:crypto'
 import { createRenderer, openBlock, createElementBlock, createElementVNode } from '../../app/node_modules/vue/dist/vue.runtime.esm-bundler.js'
 import { patchMain, patchRenderer, replaceOnce } from '../build.mjs'
+import { TIMERS } from '../../app/src/shared/timers.ts'
 const require = createRequire(import.meta.url)
 const { Ledger, DAY } = require('../ledger.cjs')
 const { createPersonal } = require('../runtime.cjs')
@@ -69,11 +70,11 @@ test('corrupt database is rejected without replacing its contents', () => tempor
   assert.deepEqual(readFileSync(file), bytes)
 }))
 
-function runtimeFixture(dir) {
+function runtimeFixture(dir, timers = [{ id: 'gartua', name: 'Gartua', schedule: { kind: 'boss', boss: 101021 } }]) {
   const ipc = new Map(), hooks = new Map(), state = { latest: null, broadcasts: [] }
   const app = { getPath: () => dir, on: (name, fn) => hooks.set(name, fn) }
   const runtime = createPersonal({ app, ipcMain: { handle: (name, fn) => ipc.set(name, fn) },
-    rendererFile: resolve(dir, 'out/renderer/index.html'), timers: () => [{ id: 'gartua', name: 'Gartua', schedule: { kind: 'boss', boss: 101021 } }], setKina: s => state.latest = s,
+    rendererFile: resolve(dir, 'out/renderer/index.html'), timers: () => timers, setKina: s => state.latest = s,
     publish: () => {}, broadcast: (channel, payload) => state.broadcasts.push({ channel, payload }) })
   runtime.start()
   runtime.accept({ type: 'addonLoaded', addon: 'personal-kina' })
@@ -223,7 +224,7 @@ test('preview request does not change history, rates, configuration, or publish 
 }))
 test('client icons have pinned hashes, WebP images, game resource identifiers and matching local URLs', () => {
   const manifest = JSON.parse(readFileSync(new URL('../game-icons.json', import.meta.url)))
-  assert.equal(Object.keys(manifest.icons).length, 7)
+  assert.equal(Object.keys(manifest.icons).length, 10)
   for (const [id, asset] of Object.entries(manifest.icons)) {
     const bytes = readFileSync(new URL(`../assets/icons/${id}.webp`, import.meta.url))
     assert.equal(createHash('sha256').update(bytes).digest('hex'), asset.sha256)
@@ -234,7 +235,27 @@ test('client icons have pinned hashes, WebP images, game resource identifiers an
   }
   assert.equal(manifest.icons.shugo.registryKey, 'menu.FieldEvent')
   assert.equal(manifest.icons.invasion.registryKey, 'fieldevent.DimensionInvasion')
+  assert.equal(manifest.icons.merchant.registryKey, 'menu.Trade')
+  assert.equal(manifest.icons.dailyReset.registryKey, 'menu.Attendance')
+  assert.equal(manifest.icons.dailyReset.sha256, manifest.icons.weeklyReset.sha256)
 })
+test('every defined notification resolves to an existing game image, including merchant and both resets', () => temporary(dir => {
+  const f = runtimeFixture(dir, TIMERS)
+  try {
+    const base = process.env.NYERK_REVIEW_BASE
+    assert.ok(base)
+    for (const icon of f.runtime.snapshot().icons) {
+      assert.ok(!icon.src.endsWith('.svg'), `${icon.id} still uses a drawn fallback`)
+      const file = icon.src.startsWith('bosses/') ? join(base, 'renderer', icon.src) : new URL(`../assets/icons/${icon.id}.webp`, import.meta.url)
+      const bytes = readFileSync(file)
+      assert.equal(bytes.toString('ascii', 8, 12), 'WEBP', icon.id)
+    }
+    const sources = new Map(f.runtime.snapshot().icons.map(icon => [icon.id, icon.src]))
+    assert.equal(sources.get('merchant'), 'personal-icons/merchant.webp')
+    assert.equal(sources.get('dailyReset'), 'personal-icons/dailyReset.webp')
+    assert.equal(sources.get('weeklyReset'), 'personal-icons/weeklyReset.webp')
+  } finally { f.close() }
+}))
 test('independent rates render while ordinary currency is idle', () => {
   assert.equal(ratesText({ earned: 0, bound: { earned: 1000, activeMs: 60000, lastAt: 60000 } }, 60000), 'Kina/h 0 · Bound/h 60.0k')
 })

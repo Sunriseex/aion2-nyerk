@@ -46,6 +46,33 @@
       "sha256": "316c2dfc0a77b7c6f11fe5f22cbbfa73f4bc155cc5a32f68b84008105d5e44a9",
       "bytes": 5362
     },
+    "merchant": {
+      "file": "personal-icons/merchant.webp",
+      "source": "https://aion2.gg/database/shops/random-shop",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qcbf5b590df93e4ebeb203c3c0eca4cd0df48dae3a",
+      "registryKey": "menu.Trade",
+      "originalFilename": "inline; filename=\"icons-registry/UT_HUD_Btn_Menu_Trade_Sprite.webp\"; filename*=UTF-8''icons-registry%2FUT_HUD_Btn_Menu_Trade_Sprite.webp",
+      "sha256": "bf5b590df93e4ebeb203c3c0eca4cd0df48dae3ac10cf9d74d7877e6c2f435da",
+      "bytes": 6146
+    },
+    "dailyReset": {
+      "file": "personal-icons/dailyReset.webp",
+      "source": "https://aion2.gg/tools/event-timer/resets",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc02a41d576d34d8a35a590deea0547449026db2cd",
+      "registryKey": "menu.Attendance",
+      "originalFilename": "inline; filename=\"icons-registry/UT_HUD_Btn_Menu_Attendance_Sprite.webp\"; filename*=UTF-8''icons-registry%2FUT_HUD_Btn_Menu_Attendance_Sprite.webp",
+      "sha256": "02a41d576d34d8a35a590deea0547449026db2cdd5f6911479298ac3d42b6d55",
+      "bytes": 5186
+    },
+    "weeklyReset": {
+      "file": "personal-icons/weeklyReset.webp",
+      "source": "https://aion2.gg/tools/event-timer/resets",
+      "url": "https://26z9clbm06.ufs.sh/f/M3KtUJweBx2Qc02a41d576d34d8a35a590deea0547449026db2cd",
+      "registryKey": "menu.Attendance",
+      "originalFilename": "inline; filename=\"icons-registry/UT_HUD_Btn_Menu_Attendance_Sprite.webp\"; filename*=UTF-8''icons-registry%2FUT_HUD_Btn_Menu_Attendance_Sprite.webp",
+      "sha256": "02a41d576d34d8a35a590deea0547449026db2cdd5f6911479298ac3d42b6d55",
+      "bytes": 5186
+    },
     "kaira": {
       "file": "personal-icons/kaira.webp",
       "source": "https://questlog.gg/aion-2/en/map",

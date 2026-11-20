@@ -26,7 +26,7 @@ Build (Windows, after installing the repo's existing app dependencies and genera
 node personal/build.mjs 'C:\path\to\original-0.2.64-program' --installer
 ```
 
-The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.1.0.exe`.
+The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.1.1.exe`.
 The installer itself never deletes user data. Stop Nyerk, back up its program and current profile,
 enable `addons.enabled.personal-kina` in the preserved settings, and keep `autoUpdateCheck=false`.
 Leave other addon choices unchanged, including the built-in DPS Meter. Launch the installed
@@ -49,16 +49,20 @@ All-time totals persist; detail older than 31 days is pruned. Periods are `(now 
 in UTC milliseconds. Seven and thirty days mean 168 and 720 hours, independent of DST.
 Multiple event icons rotate every three seconds using the existing active alert list. Existing
 sound and dismissal behavior is unchanged. Boss portraits come from the original app's assets;
-local pictograms cover periodic events and missing portraits. No network image fetch is needed.
+local pictograms remain an error fallback if an image fails to load. No runtime network image
+fetch is needed.
 
-Personal 1.1 bundles client images for Shugo Festival, Dimensional Invasion, Rift, Artifact Siege,
-the general field-boss symbol, Watcher Kaira and Guardian Lord Nahma. `game-icons.json` records
+Personal 1.1.1 bundles client images for Shugo Festival, Dimensional Invasion, Rift, Artifact Siege,
+the general field-boss symbol, Watcher Kaira, Guardian Lord Nahma, trading and reset notices. `game-icons.json` records
 source pages, client resource identifiers, download URLs and SHA-256 hashes. `fetch-icons.mjs`
-refreshes only these seven known images; the build verifies their hashes before packaging.
+refreshes only these ten explicit mappings; the build verifies their hashes before packaging.
 Game artwork belongs to NCSOFT. Event images come from Aion2.gg's client-asset registry
 (https://aion2.gg/about/data), and NPC portraits from Questlog's game database
-(https://questlog.gg/aion-2/en/map). Merchant/reset alerts keep the existing local pictograms
-until exact matching game assets are identified.
+(https://questlog.gg/aion-2/en/map). Merchant uses the game's Trade menu icon (scales), also used
+on https://aion2.gg/database/shops/random-shop. Daily and weekly reset share the game's Attendance
+calendar icon, as on https://aion2.gg/tools/event-timer/resets. These are client menu assets
+reused for notification categories; distinct native daily-reset and weekly-reset icons have not
+been confirmed. Their existing tooltip names distinguish the two reset types.
 
 The Kina tab's **Тест: босс + ивент** button, or a second launch with `--personal-preview`, starts
 a 12-second silent visual preview: Kaira, Shugo, Kaira, Shugo, each for three seconds. Its tooltip

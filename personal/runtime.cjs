@@ -46,7 +46,7 @@ function createPersonal(api) {
     let history = null
     try { if (ledger) history = ledger.snapshot(Date.now()) }
     catch (err) { error = `История недоступна: ${err.message}` }
-    return { version: '1.1.0', base: '0.2.64', history, error, pending: pending.length, replay: !persistence, preview,
+    return { version: '1.1.1', base: '0.2.64', history, error, pending: pending.length, replay: !persistence, preview,
       config, icons: icons(), identity, lastSeen, readerActive, readerError,
       rates: { unbound: rate(state, Date.now()), bound: readerActive ? rate(state.bound, Date.now()) : null },
       earned: { unbound: state.earned, bound: state.bound.earned } }
@@ -103,7 +103,7 @@ function createPersonal(api) {
         const frame = event.senderFrame
         const url = new URL(frame?.url ?? 'about:blank')
         if (frame !== event.sender.mainFrame || url.protocol !== 'file:' || url.pathname !== expected) throw new Error('Unauthorized personal view')
-        return { config, icons: icons(), version: '1.1.0', preview }
+        return { config, icons: icons(), version: '1.1.1', preview }
       })
       timer = setInterval(publish, 5000); timer.unref()
       api.app.on('before-quit', () => { clearInterval(timer); flush(); ledger?.close() })

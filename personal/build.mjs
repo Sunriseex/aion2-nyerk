@@ -101,7 +101,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       directories: { output: join(ROOT, 'build/personal-installer'), buildResources: join(ROOT, 'app/build') },
       files: ['**/*'], extraResources: [{ from: join(base, 'resources/sidecar'), to: 'sidecar' }], asar: true, electronLanguages: ['en-US'],
       win: { target: ['nsis'], icon: join(ROOT, 'app/build/icon.ico') },
-      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.1.0.exe' },
+      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.1.1.exe' },
       publish: { provider: 'generic', url: 'https://nyerk.app/updates/', channel: 'latest' },
     } })
   }

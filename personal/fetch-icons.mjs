@@ -12,6 +12,9 @@ const eventIcons = {
   rift: ['M3KtUJweBx2Qc52f5a944b4e3b2a1af0ae62b33cb3cf901536236', 'content.Rift'],
   siege: ['M3KtUJweBx2Qcd5d6dcb2c2d689520e388399bca6b6b6a8666d3f', 'content.AbyssArtifact'],
   siegeBosses: ['M3KtUJweBx2Qc316c2dfc0a77b7c6f11fe5f22cbbfa73f4bc155c', 'mapicon.LegendMonster'],
+  merchant: ['M3KtUJweBx2Qcbf5b590df93e4ebeb203c3c0eca4cd0df48dae3a', 'menu.Trade', 'https://aion2.gg/database/shops/random-shop'],
+  dailyReset: ['M3KtUJweBx2Qc02a41d576d34d8a35a590deea0547449026db2cd', 'menu.Attendance', 'https://aion2.gg/tools/event-timer/resets'],
+  weeklyReset: ['M3KtUJweBx2Qc02a41d576d34d8a35a590deea0547449026db2cd', 'menu.Attendance', 'https://aion2.gg/tools/event-timer/resets'],
 }
 const headers = { 'User-Agent': 'Mozilla/5.0', Referer: 'https://aion2.gg/' }
 const metadata = { credit: 'Game images belong to NCSOFT. Sources: Questlog and Aion2.gg client-data databases.', icons: {} }
@@ -27,7 +30,7 @@ async function save(id, url, source, registryKey) {
     originalFilename: response.headers.get('content-disposition'), sha256: createHash('sha256').update(bytes).digest('hex'), bytes: bytes.length }
   console.log(`${id}: ${bytes.length} bytes`)
 }
-for (const [id, [key, registryKey]] of Object.entries(eventIcons)) await save(id, `${HOST}${key}`, PAGE, registryKey)
+for (const [id, [key, registryKey, source = PAGE]] of Object.entries(eventIcons)) await save(id, `${HOST}${key}`, source, registryKey)
 for (const [id, npc] of [['kaira', '2600089'], ['nahma', '2600094']]) {
   const url = `https://questlog.gg/aion-2/api/trpc/database.getNpc?input=${encodeURIComponent(JSON.stringify({ id: npc, language: 'en' }))}`
   const response = await fetch(url, { headers, signal: AbortSignal.timeout(30000) })
