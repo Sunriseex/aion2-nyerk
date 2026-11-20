@@ -74,4 +74,7 @@ Live Global validation confirmed bound income attributed to a character/server, 
 history tab, and continued income after a forced-stop/relaunch with committed totals intact.
 SQLite `quick_check` returned `ok`. Active multi-alert image rotation and positive ordinary-Kina
 income have automated coverage but no live observation yet. The user confirmed the history
-table appears. A live character-switch check remains pending user participation.
+table appears. Live character switching was subsequently verified: the previous character's
+committed total stayed unchanged, a new character/server row received positive income, and
+the total included both rows. Existing wallet balances were not imported as earnings. SQLite
+`quick_check` also passed after the switch.
