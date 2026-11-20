@@ -322,7 +322,8 @@ class Tracker:
             print(f"unread {P.opcode(pkt)[0]:02x} {P.opcode(pkt)[1]:02x} record: {pkt.hex(' ')}", file=sys.stderr)
         elif (kina := P.parse_kina(pkt)) is not None:
             # The balance as is: the app works out what was earned (and per hour) from the changes.
-            self.on_event({"type": "kina", "ts": ts, "balance": kina})
+            currency, balance = kina
+            self.on_event({"type": "kina", "ts": ts, "currency": currency, "balance": balance})
         elif bosses := P.parse_field_bosses(pkt):
             if self.world_restored and bosses.world != self.world:
                 self._unrestore(bosses.world)

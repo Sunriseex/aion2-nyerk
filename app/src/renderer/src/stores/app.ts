@@ -46,8 +46,10 @@ export const useApp = defineStore('app', () => {
   const now = ref(Date.now())
   setInterval(() => (now.value = Date.now()), 5000)
   const kinaRate = computed(() => kinaPerHour(kina.value, now.value))
+  const boundKinaRate = computed(() => kinaPerHour(kina.value.bound ?? NO_KINA, now.value))
   /** Kina per hour over time, for the sparklines. */
   const kinaTimeline = computed(() => kinaSeries(kina.value, now.value))
+  const boundKinaTimeline = computed(() => kinaSeries(kina.value.bound ?? NO_KINA, now.value))
   /**
    * The collection's search, sort and filter pills. Kept here, not in the tab, so the map window's
    * collection map can follow them: the panel sends every change to main, which passes it on.
@@ -212,7 +214,7 @@ export const useApp = defineStore('app', () => {
   }
 
   return {
-    settings, status, pets, toasts, fighting, collectionView, shop, kina, kinaRate, kinaTimeline, alerting, timersState, timerFocus, fieldBosses, pvp, hudEditing, panelVisible, ready, sessionSouls, recentPets, openPetId, collectionMapOpen, mapMinimap, nearby, update, addons,
+    settings, status, pets, toasts, fighting, collectionView, shop, kina, kinaRate, boundKinaRate, kinaTimeline, boundKinaTimeline, alerting, timersState, timerFocus, fieldBosses, pvp, hudEditing, panelVisible, ready, sessionSouls, recentPets, openPetId, collectionMapOpen, mapMinimap, nearby, update, addons,
     init, set, setHud, togglePin, openPet, openCollectionMap, setMapMinimap, showPetMap, showCollectionMap, applyCollectionView, hiddenPet,
   }
 })

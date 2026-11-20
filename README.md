@@ -16,6 +16,11 @@ and weekly tasks, and times the game's events and field bosses, all without touc
   feed of drops and your Kina per hour. It clears itself between fights.
 - **Collection panel:** every pet with its genus, level and progress. Search, combine filters,
   sort by what's nearest you, and pin pets to the HUD.
+- **Separate Kina rates:** the HUD shows ordinary `Kina/h` and character-bound `Bound/h`.
+  Session shows separate earned totals and graphs. Each currency uses its own first balance as
+  a baseline; spending does not reduce earned income. Existing restart files remain supported.
+  Bound-Kina parsing currently has synthetic-packet coverage; its inventory record layout still
+  needs verification against a capture from the current Global client.
 - **Maps and minimap:** see where each soul drops, and every pet your filters leave in your zone.
   Shrink the map into a small minimap that stays over the game.
 - **Task List:** daily, weekly, event and Season tasks for each character. Keys, tickets and

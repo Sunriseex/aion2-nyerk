@@ -19,7 +19,7 @@ import { dirname, join, resolve } from 'node:path'
 import { DISPLAY_NAME } from '../shared/app.ts'
 import { broadcast } from './broadcast.ts'
 import { settings } from './settings.ts'
-import { kinaBalance, kinaRebase, NO_KINA, type KinaSession } from '../shared/kina.ts'
+import { kinaBalance, kinaRebase, kinaReset, NO_KINA, type KinaSession } from '../shared/kina.ts'
 import { fieldBosses } from './fieldBosses.ts'
 import { gameTimes } from './gameTimes.ts'
 import { featureOn } from './builtins.ts'
@@ -358,7 +358,8 @@ function handleLine(line: string): void {
       break
     }
     case 'kina':
-      setKina(kinaBalance(kina, ev['balance'] as number, Date.now()))
+      if (ev['currency'] !== undefined && ev['currency'] !== 'unbound' && ev['currency'] !== 'bound') break
+      setKina(kinaBalance(kina, ev['balance'] as number, Date.now(), ev['currency'] === 'bound' ? 'bound' : 'unbound'))
       break
     case 'shop': {
       const stock: ShopStock = {
@@ -437,7 +438,7 @@ export const tracker = {
   resetSession(): void {
     log('session reset')
     command({ cmd: 'resetSession' })
-    setKina({ ...NO_KINA, balance: kina.balance, gains: [] })
+    setKina(kinaReset(kina))
   },
   setSouls: (pet: number, souls: number): void => command({ cmd: 'set', pet, souls }),
   setName: (pet: number, name: string): void => command({ cmd: 'name', pet, name }),

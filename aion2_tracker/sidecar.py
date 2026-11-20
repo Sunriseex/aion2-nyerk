@@ -25,7 +25,7 @@ stdout, one JSON object per line (nothing else is ever written there):
                                                         that kill's monster is not known
     {"type": "pet", "pet": {...}}                       after an edit
     {"type": "combat"}                                  you killed something (at most every 5 s)
-    {"type": "kina", "balance": 3769926}                your Kina, whenever it changes
+    {"type": "kina", "currency": "unbound", "balance": 3769926}  ordinary or bound Kina
     {"type": "pvpKill", "killer": {"name", "server", "guild"}, "victim": {"name", "server"} | null,
      "mine": false, "died": false}                      a player killed a player around you
     {"type": "shop", "tab": 104, "nextAt": ms | null, "items": [{"slot", "item", "quantity",

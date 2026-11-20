@@ -26,9 +26,13 @@ function resetSession(): void {
   confirming.value = false
   void bridge().invoke('tracker:resetSession')
 }
+const currencies = computed(() => [
+  { id: 'unbound', label: 'Ordinary Kina', rate: store.kinaRate, earned: store.kina.earned, timeline: store.kinaTimeline },
+  { id: 'bound', label: 'Bound Kina', rate: store.boundKinaRate, earned: store.kina.bound?.earned ?? 0, timeline: store.boundKinaTimeline },
+])
 /** "14:32 · 48.2k/h": a point of the timeline, on hover. */
-const kinaPointLabel = (i: number): string => {
-  const p = store.kinaTimeline[i]
+const kinaPointLabel = (timeline: typeof store.kinaTimeline, i: number): string => {
+  const p = timeline[i]
   if (!p) return ''
   const at = new Date(p.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
   return `${at} · ${formatKina(p.perHour)}/h`
@@ -60,22 +64,23 @@ const lastPacket = computed(() => {
         <div class="text-3xl font-semibold tabular-nums text-accent">{{ store.sessionSouls }}</div>
         <div class="text-xs text-darker">souls this session, across {{ gained.length }} pet{{ gained.length === 1 ? '' : 's' }}</div>
       </div>
-      <div class="rounded-lg bg-card p-3 text-center">
+      <div v-for="currency in currencies" :key="currency.id" class="rounded-lg bg-card p-3 text-center">
+        <div class="mb-1 text-xs text-darker">{{ currency.label }}</div>
         <div
-          v-if="store.kinaRate !== null"
+          v-if="currency.rate !== null"
           title="Kina earned per hour of farming: gains only (spending is not taken off), and a break of more than 5 minutes counts as 5."
-          class="text-3xl font-semibold tabular-nums text-yellow">{{ formatKina(store.kinaRate) }}</div>
+          class="text-3xl font-semibold tabular-nums text-yellow">{{ formatKina(currency.rate) }}</div>
         <!-- Kina is coming in, but under a minute of it: no rate yet. -->
-        <div v-else-if="store.kina.earned" class="flex h-9 items-center justify-center text-lg font-semibold text-yellow">measuring…</div>
+        <div v-else-if="currency.earned" class="flex h-9 items-center justify-center text-lg font-semibold text-yellow">measuring…</div>
         <div v-else class="text-3xl font-semibold text-yellow">—</div>
         <div class="text-xs text-darker">
-          <template v-if="store.kina.earned">Kina per hour, {{ formatKina(store.kina.earned) }} earned</template>
+          <template v-if="currency.earned">Kina per hour, {{ formatKina(currency.earned) }} earned</template>
           <template v-else>Kina per hour, from your first loot</template>
         </div>
         <Sparkline
-          v-if="store.kinaTimeline.length"
-          :values="store.kinaTimeline.map((p) => p.perHour)"
-          :label="kinaPointLabel"
+          v-if="currency.timeline.length"
+          :values="currency.timeline.map((p) => p.perHour)"
+          :label="(i) => kinaPointLabel(currency.timeline, i)"
           class="mt-2 h-8 text-yellow"
         />
       </div>

@@ -65,12 +65,12 @@ const crystalLabel = (pet: number): string => {
   const genus = petInfo(pet)?.genus
   return genus ? `${GENUS_LABEL[genus]} crystal` : 'crystal'
 }
-/** Kina per hour at the top right, once there is a rate. */
+/** Independent ordinary and bound Kina rates at the top right. */
 const kinaText = computed(() => {
   if (!hud.value.kina) return null
-  if (store.kinaRate !== null) return `${formatKina(store.kinaRate)} Kina/h`
-  // Kina is coming in, but under a minute of it: no rate yet.
-  return store.kina.earned ? 'Kina/h measuring…' : null
+  const ordinary = store.kinaRate === null ? (store.kina.earned ? '…' : '0') : formatKina(store.kinaRate)
+  const bound = store.boundKinaRate === null ? (store.kina.bound?.earned ? '…' : '0') : formatKina(store.boundKinaRate)
+  return `Kina/h ${ordinary} · Bound/h ${bound}`
 })
 /** Between fights (idle timeout): the pets have nothing to show, so they hide; pinned pets included. */
 const resting = computed(() => !!hud.value.idleHideSeconds && !store.fighting)
@@ -185,7 +185,7 @@ onBeforeUnmount(() => {
             :stroke="1.5"
             class="mx-1 h-3 min-w-0 flex-1 text-yellow opacity-80"
           />
-          <span v-if="kinaText" class="ml-auto shrink-0 normal-case tabular-nums text-yellow" title="This session's Kina per hour">{{ kinaText }}</span>
+          <span v-if="kinaText" class="ml-auto min-w-0 text-right normal-case tabular-nums text-yellow" title="Ordinary and bound Kina earned per hour, tracked separately. … means measuring the first minute.">{{ kinaText }}</span>
           <button
             v-if="mapButtonShown"
             type="button"

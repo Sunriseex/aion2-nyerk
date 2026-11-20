@@ -777,9 +777,10 @@ def parse_player(pkt: bytes) -> Player | None:
 
 OP_ITEM = (0x1B, 0x56)  # an inventory stack's new count; Kina is one of them
 KINA_ITEM = bytes.fromhex("3f337037")
+BOUND_KINA_ITEM = (930100001).to_bytes(4, "little")
 
 
-def parse_kina(pkt: bytes) -> int | None:
+def parse_kina(pkt: bytes) -> tuple[str, int] | None:
     """Your Kina balance, from the `1b 56` record of its stack:
     `1b 56 01 01 00 <u32> <u32> 3f 33 70 37 <balance u64 LE> ...` (44 bytes with the length).
     Identified 2026-10-13 in kills1, sparkie_long, lv3_crystals and lv3_cogni: one after each kill
@@ -789,9 +790,12 @@ def parse_kina(pkt: bytes) -> int | None:
         return None
     _, vlen = read_varint(pkt, 0)
     b = pkt[vlen + 2 :]
-    if len(b) < 23 or b[0] != 0x01 or b[11:15] != KINA_ITEM:
+    if len(b) < 23 or b[0] != 0x01:
         return None
-    return int.from_bytes(b[15:23], "little")
+    currency = {KINA_ITEM: "unbound", BOUND_KINA_ITEM: "bound"}.get(b[11:15])
+    if currency is None:
+        return None
+    return currency, int.from_bytes(b[15:23], "little")
 
 
 OP_FIELD_BOSSES = (0x01, 0x91)  # the map's field boss list for your zone, every ~3 s while the map is open

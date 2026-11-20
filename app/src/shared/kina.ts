@@ -9,6 +9,8 @@
  */
 
 export interface KinaSession {
+  /** Separate balance and rate for character-bound Kina; absent in older restart files. */
+  bound?: KinaSession
   /** The last balance seen; null until one arrives (and again after entering the world). */
   balance: number | null
   earned: number
@@ -34,17 +36,26 @@ export const KINA_IDLE_MS = 5 * 60_000
 export const KINA_MIN_MS = 60_000
 
 /** A new balance from the tracker, at `now`. */
-export function kinaBalance(s: KinaSession, balance: number, now: number): KinaSession {
+export function kinaBalance(s: KinaSession, balance: number, now: number, currency: 'unbound' | 'bound' = 'unbound'): KinaSession {
+  if (!Number.isSafeInteger(balance) || balance < 0 || !Number.isFinite(now)) return s
+  if (currency === 'bound') return { ...s, bound: kinaBalance(s.bound ?? NO_KINA, balance, now) }
   if (s.balance === null) return { ...s, balance, lastAt: s.earned ? s.lastAt : now }
   const gain = balance - s.balance
   if (gain <= 0) return { ...s, balance }
   const gap = s.lastAt === null ? 0 : Math.min(Math.max(now - s.lastAt, 0), KINA_IDLE_MS)
   const gains = [...s.gains.filter(([at]) => at > now - KINA_HISTORY_MS - KINA_WINDOW_MS), [now, gain] as [number, number]]
-  return { balance, earned: s.earned + gain, activeMs: s.activeMs + gap, lastAt: now, gains }
+  return { ...s, balance, earned: s.earned + gain, activeMs: s.activeMs + gap, lastAt: now, gains }
 }
 
 /** Entering the world (maybe as another character): the next balance is a new starting point. */
-export const kinaRebase = (s: KinaSession): KinaSession => ({ ...s, balance: null })
+export const kinaRebase = (s: KinaSession): KinaSession => ({
+  ...s, balance: null, ...(s.bound ? { bound: { ...s.bound, balance: null } } : {}),
+})
+
+export const kinaReset = (s: KinaSession): KinaSession => ({
+  ...NO_KINA, balance: s.balance, gains: [],
+  ...(s.bound ? { bound: { ...NO_KINA, balance: s.bound.balance, gains: [] } } : {}),
+})
 
 /** Kina per hour at `now`, or null before there is enough to tell. */
 export function kinaPerHour(s: KinaSession, now: number): number | null {
