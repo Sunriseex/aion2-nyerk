@@ -4,7 +4,8 @@ import { mkdtempSync, rmSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { createRequire } from 'node:module'
-import { AlertQueue, ratesText, personalBubble } from '../renderer.mjs'
+import { AlertQueue, ratesText, boundCard } from '../renderer.mjs'
+import { createRenderer, openBlock, createElementBlock, createElementVNode } from '../../app/node_modules/vue/dist/vue.runtime.esm-bundler.js'
 import { patchMain, patchRenderer, replaceOnce } from '../build.mjs'
 const require = createRequire(import.meta.url)
 const { Ledger, DAY } = require('../ledger.cjs')
@@ -13,7 +14,10 @@ const { createPersonal } = require('../runtime.cjs')
 const gain = (id, amount, at, identity = null, epoch = 'session') => ({ kind: 'gain', id, amount, at, identity, epoch })
 function temporary(fn) {
   const dir = mkdtempSync(join(tmpdir(), 'nyerk-personal-test-'))
-  try { return fn(dir) } finally { rmSync(dir, { recursive: true, force: true }) }
+  try { return fn(dir) } finally {
+    assert.ok(resolve(dir).startsWith(resolve(join(tmpdir(), 'nyerk-personal-test-'))))
+    rmSync(dir, { recursive: true, force: true })
+  }
 }
 test('rolling periods exclude exact lower boundary and future records; all-time survives pruning and reopening', () => temporary(dir => {
   const now = 50 * DAY, file = join(dir, 'history.sqlite')
@@ -68,9 +72,10 @@ function runtimeFixture(dir) {
   const ipc = new Map(), hooks = new Map(), state = { latest: null }
   const app = { getPath: () => dir, on: (name, fn) => hooks.set(name, fn) }
   const runtime = createPersonal({ app, ipcMain: { handle: (name, fn) => ipc.set(name, fn) },
-    rendererFile: resolve(dir, 'out/renderer/index.html'), timers: () => [], setKina: s => state.latest = s,
+    rendererFile: resolve(dir, 'out/renderer/index.html'), timers: () => [{ id: 'gartua', name: 'Gartua', schedule: { kind: 'boss', boss: 101021 } }], setKina: s => state.latest = s,
     publish: () => {}, broadcast: () => {} })
   runtime.start()
+  runtime.accept({ type: 'addonLoaded', addon: 'personal-kina' })
   return { runtime, state, close: () => hooks.get('before-quit')(), ipc }
 }
 test('runtime separates currencies; spending, reconnects, character switches and session reset never inflate history', () => temporary(dir => {
@@ -122,6 +127,59 @@ test('runtime retains failed writes and retries them without counting the same i
     assert.equal(f.runtime.snapshot().history.totals.total, 100)
   } finally { Ledger.prototype.apply = original; f.close() }
 }))
+test('unwritable history path does not abort app startup and reports the problem', () => temporary(dir => {
+  writeFileSync(join(dir, 'personal-kina'), 'existing file, not a directory')
+  const f = runtimeFixture(dir)
+  try {
+    assert.match(f.runtime.snapshot().error, /История не сохранена/)
+    assert.equal(f.runtime.snapshot().history, null)
+    assert.equal(readFileSync(join(dir, 'personal-kina'), 'utf8'), 'existing file, not a directory')
+  } finally { f.close() }
+}))
+test('disabled or failed personal reader leaves ordinary rates available without writing bound history', () => temporary(dir => {
+  const f = runtimeFixture(dir)
+  try {
+    for (const balance of [100, 200]) f.runtime.accept({ type: 'addon', addon: 'personal-kina', name: 'balance', data: { currency: 'bound', balance } })
+    f.runtime.helperStarting()
+    for (const balance of [1000, 1050]) f.runtime.accept({ type: 'kina', balance })
+    assert.equal(f.state.latest.earned, 50)
+    assert.equal(f.state.latest.boundActive, false)
+    assert.equal(f.runtime.snapshot().history.totals.total, 100)
+    f.runtime.accept({ type: 'addonLoaded', addon: 'personal-kina' })
+    f.runtime.accept({ type: 'kina', balance: 99999 })
+    assert.equal(f.state.latest.balance, null)
+    f.runtime.accept({ type: 'addonError', addon: 'personal-kina', fatal: true, detail: 'test error' })
+    assert.equal(f.runtime.snapshot().readerActive, false)
+    assert.equal(f.runtime.snapshot().readerError, 'test error')
+  } finally { f.close() }
+}))
+test('packaged icon URLs resolve beside renderer assets, not at the drive root', () => temporary(dir => {
+  const f = runtimeFixture(dir)
+  try {
+    const icon = f.runtime.snapshot().icons[0].src
+    assert.equal(new URL(icon, 'file:///C:/app/out/renderer/index.html').pathname, '/C:/app/out/renderer/bosses/101021.webp')
+    assert.equal(new URL('personal-icons/event.svg', 'file:///C:/app/out/renderer/index.html').pathname, '/C:/app/out/renderer/personal-icons/event.svg')
+  } finally { f.close() }
+}))
+test('bound Session card updates inside an optimized Vue compiled block', () => {
+  const host = createRenderer({
+    createElement: tag => ({ tag, children: [], text: '' }), createText: text => ({ text }), createComment: text => ({ text }),
+    setText: (node, text) => node.text = text, setElementText: (node, text) => { node.text = text; node.children = [] },
+    insert: (node, parent) => { node.parent = parent; parent.children.push(node) },
+    remove: node => node.parent.children.splice(node.parent.children.indexOf(node), 1),
+    parentNode: node => node.parent, nextSibling: () => null, patchProp: () => {},
+  })
+  const root = { children: [] }
+  const view = earned => {
+    openBlock()
+    return createElementBlock('section', null, [boundCard(createElementVNode, { bound: { earned, activeMs: 60000, lastAt: 60000 } }, 60000)])
+  }
+  host.render(view(0), root)
+  host.render(view(100), root)
+  const card = root.children[0].children[0]
+  assert.equal(card.children[0].text, '6.00k')
+  assert.equal(card.children[1].text, 'Bound Kina per hour · 100 earned')
+})
 test('alert queue rotates every three seconds, keeps position on additions, and drops dismissed events', () => {
   const q = new AlertQueue(), a = { id: 'a', at: 20 }, b = { id: 'b', at: 30 }, c = { id: 'c', at: 10 }
   assert.equal(q.select([b, a], 0), a)

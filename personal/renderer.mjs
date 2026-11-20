@@ -10,7 +10,7 @@ export function perHour(s, now) {
 }
 export function ratesText(session, now) {
   const text = s => { const rate = perHour(s, now); return rate === null ? (s?.earned ? '…' : '0') : formatKina(rate) }
-  return `Kina/h ${text(session)} · Bound/h ${text(session.bound)}`
+  return `Kina/h ${text(session)} · Bound/h ${session.boundActive === false ? 'paused' : text(session.bound)}`
 }
 export function personalClock(ref, dispose) {
   const now = ref(Date.now())
@@ -22,8 +22,8 @@ export function boundCard(create, session, now) {
   const bound = session.bound
   const rate = perHour(bound, now)
   return create('div', { class: 'rounded-lg bg-card p-3 text-center', style: 'grid-column:1/-1' }, [
-    create('div', { class: 'text-3xl font-semibold tabular-nums text-yellow' }, rate === null ? (bound?.earned ? 'measuring…' : '0') : formatKina(rate)),
-    create('div', { class: 'text-xs text-darker' }, `Bound Kina per hour · ${formatKina(bound?.earned ?? 0)} earned`),
+    create('div', { class: 'text-3xl font-semibold tabular-nums text-yellow' }, session.boundActive === false ? 'paused' : rate === null ? (bound?.earned ? 'measuring…' : '0') : formatKina(rate), 1),
+    create('div', { class: 'text-xs text-darker' }, `Bound Kina per hour · ${formatKina(bound?.earned ?? 0)} earned`, 1),
   ])
 }
 
@@ -57,8 +57,8 @@ export function personalBubble(store, ref, computed, watch, mounted, dispose, br
   return computed(() => {
     const alert = selected.value
     const def = state.value.icons.find(i => i.id === alert?.id)
-    const src = alert ? (failed.has(def?.src) ? '/personal-icons/event.svg' : def?.src ?? '/personal-icons/event.svg') : normalIcon
+    const src = alert ? (failed.has(def?.src) ? 'personal-icons/event.svg' : def?.src ?? 'personal-icons/event.svg') : normalIcon
     return { src, title: alert ? `${def?.name ?? alert.id} · ${new Date(alert.at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} · ${store.alerting.length} уведомл. — нажмите, чтобы открыть` : null,
-      failed: () => { if (def?.src) failed.add(def.src); state.value = { ...state.value } } }
+      failed: () => { if (def?.src && !failed.has(def.src)) { failed.add(def.src); state.value = { ...state.value } } } }
   })
 }

@@ -20,7 +20,7 @@ var personal = require('../personal/runtime.cjs').createPersonal({
 });`)
   s = replaceOnce(s, 'void electron2.app.whenReady().then(() => {', 'void electron2.app.whenReady().then(() => {\n    personal.start();')
   s = replaceOnce(s, '  switch (ev["type"]) {\n    case "addon":\n    case "addonLoaded":', '  if (personal.accept(ev)) return;\n  switch (ev["type"]) {\n    case "addon":\n    case "addonLoaded":')
-  s = replaceOnce(s, '  const args = [...cmd.args, "--data", data];', '  personal.begin();\n  const args = [...cmd.args, "--data", data];')
+  s = replaceOnce(s, '  const args = [...cmd.args, "--data", data];', '  personal.helperStarting();\n  const args = [...cmd.args, "--data", data];')
   s = replaceOnce(s, 'setKina({ ...NO_KINA, balance: kina.balance, gains: [] });', 'personal.resetSession();')
   s = replaceOnce(s, 'setKina(kinaRebase(kina));', 'personal.rebase();')
   s = replaceOnce(s, 'if (saved.kina) setKina(kinaRebase(saved.kina));', 'if (saved.kina) personal.restore(saved.kina);')

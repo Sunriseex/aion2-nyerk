@@ -7,7 +7,7 @@ function render() {
   const s = current
   const stale = !s.lastSeen || Date.now() - s.lastSeen > 60_000
   el('status').className = s.error || s.replay ? 'error' : ''
-  el('status').textContent = s.error ? `${s.error}. Ожидают записи: ${s.pending}.` : s.replay ? 'Воспроизведение записи: история не пополняется.' : stale ? 'Ожидание новых пакетов кины. Накопленная история сохранена.' : 'Учёт активен · история сохраняется локально'
+  el('status').textContent = s.error ? `${s.error}. Ожидают записи: ${s.pending}.` : s.replay ? 'Воспроизведение записи: история не пополняется.' : !s.readerActive ? `История на паузе: ${s.readerError ?? 'считыватель выключен или запускается'}.` : stale ? 'Ожидание новых пакетов кины. Накопленная история сохранена.' : 'Учёт активен · история сохраняется локально'
   for (const currency of ['unbound', 'bound']) el(currency).textContent = s.rates[currency] === null ? (s.earned[currency] ? '…' : '0') : amount(s.rates[currency])
   const h = s.history
   el('total').textContent = h ? amount(h.totals[period]) : '…'

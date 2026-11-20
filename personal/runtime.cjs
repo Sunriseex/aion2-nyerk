@@ -19,7 +19,7 @@ function rate(s, now) {
   return ms < 60_000 ? null : s.earned / ms * 3_600_000
 }
 function createPersonal(api) {
-  let ledger, directory, error = null, persistence = true, lastSeen = null
+  let ledger, directory, error = null, persistence = true, lastSeen = null, readerActive = false, readerError = null
   let state = { ...blank(), bound: blank() }, identity = null, epoch = randomUUID(), seq = 0
   const pending = []
   let config = { bubbleIcons: true }
@@ -27,6 +27,7 @@ function createPersonal(api) {
   function flush() {
     if (!persistence) return
     try {
+      mkdirSync(directory, { recursive: true })
       ledger ??= new Ledger(join(directory, 'history.sqlite'))
       while (pending.length) { ledger.apply(pending[0]); pending.shift() }
       if (Date.now() - lastPrune > 3_600_000) { ledger.prune(Date.now()); lastPrune = Date.now() }
@@ -35,7 +36,7 @@ function createPersonal(api) {
   }
   function icons() {
     return api.timers().map(t => ({ id: t.id, name: t.name,
-      src: t.schedule.kind === 'boss' ? `/bosses/${t.schedule.boss}.webp` : `/personal-icons/${t.id}.svg` }))
+      src: t.schedule.kind === 'boss' ? `bosses/${t.schedule.boss}.webp` : `personal-icons/${t.id}.svg` }))
   }
   function snapshot() {
     flush()
@@ -43,7 +44,8 @@ function createPersonal(api) {
     try { if (ledger) history = ledger.snapshot(Date.now()) }
     catch (err) { error = `История недоступна: ${err.message}` }
     return { version: '1.0.0', base: '0.2.64', history, error, pending: pending.length, replay: !persistence,
-      config, icons: icons(), identity, lastSeen, rates: { unbound: rate(state, Date.now()), bound: rate(state.bound, Date.now()) },
+      config, icons: icons(), identity, lastSeen, readerActive, readerError,
+      rates: { unbound: rate(state, Date.now()), bound: readerActive ? rate(state.bound, Date.now()) : null },
       earned: { unbound: state.earned, bound: state.bound.earned } }
   }
   function publish() {
@@ -53,8 +55,9 @@ function createPersonal(api) {
   }
   function rebase() {
     state = { ...state, balance: null, bound: { ...state.bound, balance: null } }
-    api.setKina(state)
+    sendState()
   }
+  function sendState() { api.setKina({ ...state, boundActive: readerActive }) }
   function begin() {
     epoch = randomUUID(); seq = 0; identity = null; lastSeen = null
     rebase()
@@ -82,12 +85,11 @@ function createPersonal(api) {
         flush()
       }
     } else state = { ...next, bound: state.bound }
-    api.setKina(state)
+    sendState()
   }
   return {
     start() {
       directory = join(api.app.getPath('userData'), 'personal-kina')
-      mkdirSync(directory, { recursive: true })
       persistence = !process.env.A2T_REPLAY
       try {
         const saved = JSON.parse(readFileSync(join(directory, 'config.json'), 'utf8'))
@@ -105,6 +107,7 @@ function createPersonal(api) {
       publish()
     },
     begin, rebase,
+    helperStarting() { readerActive = false; readerError = null; begin() },
     restore(saved) {
       state = { ...saved, bound: saved.bound ?? blank() }
       rebase()
@@ -112,7 +115,7 @@ function createPersonal(api) {
     },
     resetSession() {
       state = { ...blank(), balance: state.balance, bound: { ...blank(), balance: state.bound.balance } }
-      api.setKina(state); publish()
+      sendState(); publish()
     },
     request(name, data) {
       if (name === 'config') {
@@ -126,14 +129,20 @@ function createPersonal(api) {
       return null
     },
     accept(ev) {
-      // The addon parses both currencies. Ignoring the legacy ordinary event avoids double counting.
-      if (ev.type === 'kina') return true
+      // The standard ordinary stream remains useful if the personal reader is disabled or fails.
+      if (ev.type === 'kina') {
+        if (!readerActive) balance({ currency: 'unbound', balance: ev.balance })
+        return true
+      }
       if (ev.type === 'sync') begin()
       if (ev.type === 'character') identify({ name: ev.name, server: ev.server })
-      if (ev.type === 'addonLoaded' && ev.addon === 'personal-kina') begin()
+      if (ev.type === 'addonLoaded' && ev.addon === 'personal-kina') { readerActive = true; readerError = null; begin() }
+      if (ev.type === 'addonError' && ev.addon === 'personal-kina' && ev.fatal) {
+        readerActive = false; readerError = String(ev.detail ?? 'Ошибка считывателя'); begin()
+      }
       if (ev.type === 'status' && ['listening', 'idle'].includes(ev.state)) begin()
       if (ev.type !== 'addon' || ev.addon !== 'personal-kina') return false
-      if (ev.name === 'balance') balance(ev.data)
+      if (ev.name === 'balance') { if (readerActive) balance(ev.data) }
       else if (ev.name === 'identity') identify(ev.data)
       else if (ev.name === 'boundary') begin()
       else if (ev.name === 'refresh') publish()
