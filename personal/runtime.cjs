@@ -34,7 +34,7 @@ function createPersonal(api) {
       while (pending.length) { ledger.apply(pending[0]); pending.shift() }
       if (Date.now() - lastPrune > 3_600_000) { ledger.prune(Date.now()); lastPrune = Date.now() }
       error = null
-    } catch (err) { error = `История не сохранена: ${err.message}` }
+    } catch (err) { error = `History not saved: ${err.message}` }
   }
   function icons() {
     return api.timers().map(t => ({ id: t.id, name: t.name,
@@ -45,8 +45,8 @@ function createPersonal(api) {
     flush()
     let history = null
     try { if (ledger) history = ledger.snapshot(Date.now()) }
-    catch (err) { error = `История недоступна: ${err.message}` }
-    return { version: '1.1.1', base: '0.2.64', history, error, pending: pending.length, replay: !persistence, preview,
+    catch (err) { error = `History unavailable: ${err.message}` }
+    return { version: '1.2.0', base: '0.2.64', history, error, pending: pending.length, replay: !persistence, preview,
       config, icons: icons(), identity, lastSeen, readerActive, readerError,
       rates: { unbound: rate(state, Date.now()), bound: readerActive ? rate(state.bound, Date.now()) : null },
       earned: { unbound: state.earned, bound: state.bound.earned } }
@@ -97,13 +97,13 @@ function createPersonal(api) {
       try {
         const saved = JSON.parse(readFileSync(join(directory, 'config.json'), 'utf8'))
         if (typeof saved.bubbleIcons === 'boolean') config = { bubbleIcons: saved.bubbleIcons }
-      } catch (err) { if (err.code !== 'ENOENT') error = `Настройки дополнения не прочитаны: ${err.message}` }
+      } catch (err) { if (err.code !== 'ENOENT') error = `Cannot read extension settings: ${err.message}` }
       const expected = pathToFileURL(api.rendererFile).pathname
       api.ipcMain.handle('personal:get', event => {
         const frame = event.senderFrame
         const url = new URL(frame?.url ?? 'about:blank')
         if (frame !== event.sender.mainFrame || url.protocol !== 'file:' || url.pathname !== expected) throw new Error('Unauthorized personal view')
-        return { config, icons: icons(), version: '1.1.1', preview }
+        return { config, icons: icons(), version: '1.2.0', preview }
       })
       timer = setInterval(publish, 5000); timer.unref()
       api.app.on('before-quit', () => { clearInterval(timer); flush(); ledger?.close() })
@@ -145,7 +145,7 @@ function createPersonal(api) {
       if (ev.type === 'character') identify({ name: ev.name, server: ev.server })
       if (ev.type === 'addonLoaded' && ev.addon === 'personal-kina') { readerActive = true; readerError = null; begin() }
       if (ev.type === 'addonError' && ev.addon === 'personal-kina' && ev.fatal) {
-        readerActive = false; readerError = String(ev.detail ?? 'Ошибка считывателя'); begin()
+        readerActive = false; readerError = String(ev.detail ?? 'Reader error'); begin()
       }
       if (ev.type === 'status' && ['listening', 'idle'].includes(ev.state)) begin()
       if (ev.type !== 'addon' || ev.addon !== 'personal-kina') return false

@@ -16,7 +16,7 @@ class Ledger {
       CREATE INDEX IF NOT EXISTS gains_time ON gains(at);
       CREATE INDEX IF NOT EXISTS gains_epoch ON gains(epoch, person);`)
       this.db.prepare('INSERT OR IGNORE INTO meta VALUES (?, ?)').run('startedAt', String(now))
-      this.db.prepare('INSERT OR IGNORE INTO people VALUES (?, ?, NULL)').run('?', 'Персонаж не определён')
+      this.db.prepare('INSERT OR IGNORE INTO people VALUES (?, ?, NULL)').run('?', 'Unassigned character')
     } catch (error) { this.db.close(); throw error }
   }
   transaction(fn) {

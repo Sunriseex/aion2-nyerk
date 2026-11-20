@@ -133,7 +133,7 @@ test('unwritable history path does not abort app startup and reports the problem
   writeFileSync(join(dir, 'personal-kina'), 'existing file, not a directory')
   const f = runtimeFixture(dir)
   try {
-    assert.match(f.runtime.snapshot().error, /История не сохранена/)
+    assert.match(f.runtime.snapshot().error, /History not saved/)
     assert.equal(f.runtime.snapshot().history, null)
     assert.equal(readFileSync(join(dir, 'personal-kina'), 'utf8'), 'existing file, not a directory')
   } finally { f.close() }
@@ -169,7 +169,7 @@ test('bound Session card updates inside an optimized Vue compiled block', () => 
     setText: (node, text) => node.text = text, setElementText: (node, text) => { node.text = text; node.children = [] },
     insert: (node, parent) => { node.parent = parent; parent.children.push(node) },
     remove: node => node.parent.children.splice(node.parent.children.indexOf(node), 1),
-    parentNode: node => node.parent, nextSibling: () => null, patchProp: () => {},
+    parentNode: node => node.parent, nextSibling: () => null, patchProp: (node, key, _old, value) => { (node.props ??= {})[key] = value },
   })
   const root = { children: [] }
   const view = earned => {
@@ -177,9 +177,12 @@ test('bound Session card updates inside an optimized Vue compiled block', () => 
     return createElementBlock('section', null, [boundCard(createElementVNode, { bound: { earned, activeMs: 60000, lastAt: 60000 } }, 60000)])
   }
   host.render(view(0), root)
+  assert.equal(root.children[0].children[0].children[0].text, 'Calculating…')
+  assert.match(root.children[0].children[0].children[0].props.class, /text-lg/)
   host.render(view(100), root)
   const card = root.children[0].children[0]
   assert.equal(card.children[0].text, '6.00k')
+  assert.match(card.children[0].props.class, /text-3xl/)
   assert.equal(card.children[1].text, 'Bound Kina per hour · 100 earned')
 })
 test('alert queue rotates every three seconds, keeps position on additions, and drops dismissed events', () => {
@@ -257,7 +260,22 @@ test('every defined notification resolves to an existing game image, including m
   } finally { f.close() }
 }))
 test('independent rates render while ordinary currency is idle', () => {
-  assert.equal(ratesText({ earned: 0, bound: { earned: 1000, activeMs: 60000, lastAt: 60000 } }, 60000), 'Kina/h 0 · Bound/h 60.0k')
+  assert.equal(ratesText({ earned: 0, bound: { earned: 1000, activeMs: 60000, lastAt: 60000 } }, 60000), 'Kina/h Calculating… · Bound/h 60.0k')
+})
+test('unmeasured rates say Calculating until the one-minute threshold and keep Paused distinct', () => {
+  const early = { earned: 100, activeMs: 30000, lastAt: 30000 }
+  assert.equal(ratesText({ earned: 0 }, 0), 'Kina/h Calculating… · Bound/h Calculating…')
+  assert.equal(ratesText({ ...early, bound: early }, 30000), 'Kina/h Calculating… · Bound/h Calculating…')
+  assert.equal(ratesText({ ...early, bound: early }, 60000), 'Kina/h 6.00k · Bound/h 6.00k')
+  assert.equal(ratesText({ ...early, bound: early, boundActive: false }, 60000), 'Kina/h 6.00k · Bound/h Paused')
+})
+test('extension UI is English while character names remain dynamic data', () => {
+  for (const file of ['renderer.mjs', 'runtime.cjs', 'addon/manifest.json', 'addon/tab.html', 'addon/tab.js']) {
+    assert.doesNotMatch(readFileSync(new URL(`../${file}`, import.meta.url), 'utf8'), /[\u0400-\u04ff]/, file)
+  }
+  const manifest = JSON.parse(readFileSync(new URL('../addon/manifest.json', import.meta.url)))
+  assert.equal(manifest.tab.label, 'Kina')
+  assert.match(readFileSync(new URL('../addon/tab.html', import.meta.url), 'utf8'), /<html lang="en">/)
 })
 test('patcher refuses ambiguous inputs and preserves the original DPS, custom sound and addon HUD implementations', () => {
   assert.throws(() => replaceOnce('x x', 'x', 'y'), /ambiguous/)
@@ -268,4 +286,7 @@ test('patcher refuses ambiguous inputs and preserves the original DPS, custom so
   for (const text of ['async function pickSound(', 'function setAddonHudHover(', 'function moveKillFeedToHud(', 'customSounds']) assert.ok(patched.includes(text), text)
   const renderer = patchRenderer(readFileSync(join(base, 'renderer/assets/index-D0Azwfnj.js'), 'utf8'))
   for (const text of ['customSounds[v.id]', 'personalIcon.value.src', 'key:personalIcon.value.active?"personal-alert":o.value', 'boundCard(c,t.kina,personalNow.value)', '__name:"SessionTab"']) assert.ok(renderer.includes(text), text)
+  assert.ok(renderer.includes('"overflow-wrap":"anywhere"'))
+  assert.ok(renderer.includes('h("div",O0,"Calculating…")'))
+  assert.ok(renderer.includes('h("div",N0,"Calculating…")'))
 })

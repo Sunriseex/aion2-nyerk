@@ -26,7 +26,7 @@ Build (Windows, after installing the repo's existing app dependencies and genera
 node personal/build.mjs 'C:\path\to\original-0.2.64-program' --installer
 ```
 
-The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.1.1.exe`.
+The installer is `build/personal-installer/Nyerk-Personal-0.2.64-1.2.0.exe`.
 The installer itself never deletes user data. Stop Nyerk, back up its program and current profile,
 enable `addons.enabled.personal-kina` in the preserved settings, and keep `autoUpdateCheck=false`.
 Leave other addon choices unchanged, including the built-in DPS Meter. Launch the installed
@@ -73,9 +73,9 @@ archive matched the package. Settings, collection and all income totals were pre
 installation; SQLite `quick_check` passed. The new image files were visually inspected. Actual
 merchant and reset alert times were not awaited for this asset-only update.
 
-The Kina tab's **Тест: босс + ивент** button, or a second launch with `--personal-preview`, starts
+The Kina tab's **Test boss + event icons** button, or a second launch with `--personal-preview`, starts
 a 12-second silent visual preview: Kaira, Shugo, Kaira, Shugo, each for three seconds. Its tooltip
-says `ТЕСТ`. Preview does not broadcast timer alerts, change real dismissal state, change the
+says `TEST`. Preview does not broadcast timer alerts, change real dismissal state, change the
 stored icon toggle, or add income. It ends even if a window throttles broadcast updates, and
 then resumes any real active alerts (or the normal Nyerk icon). Soul pulses do not replace the
 image node during preview or real alerts. Preview accepts no event IDs or other parameters.
@@ -97,6 +97,15 @@ $env:NYERK_REVIEW_BASE = 'C:\path\to\extracted-original\out'
 node --test personal/tests/personal.test.mjs
 .venv/Scripts/python -m pytest personal/tests/test_reader.py tests/test_kina.py
 ```
+
+Personal 1.2 uses English throughout the extension: navigation, statuses, messages, tooltips,
+preview controls and en-US number/date formatting. Character names remain exactly as received
+from the game. Existing unknown-character rows are labelled in English by their reserved key;
+stored history is not rewritten. Rates with insufficient data show `Calculating…` in the HUD,
+Session and Kina tab, including before the first gain. Stopped bound readers show `Paused`.
+The one-minute calculation threshold and income accounting are unchanged. The compact HUD
+rate label can shrink and wrap, and Session uses a smaller font for placeholders; both text and
+font update through the optimized Vue block when the real rate becomes available.
 
 Recovery: stop the patched app, restore the original program directory, keep the current profile
 and `personal-kina` directory. Do not restore an older collection over new play progress.

@@ -40,8 +40,12 @@ export function patchRenderer(source) {
   s = replaceOnce(s, 's.value.kina?t.kinaRate!==null?`${ws(t.kinaRate)} Kina/h`:t.kina.earned?"Kina/h measuring…":null:null',
     's.value.kina?ratesText(t.kina,personalNow.value):null')
   s = replaceOnce(s, 'title:"This session\'s Kina per hour"', 'title:"Ordinary and bound Kina per hour, tracked separately"')
+  s = replaceOnce(s, 'class:"ml-auto shrink-0 normal-case tabular-nums text-yellow"', 'class:"ml-auto min-w-0 normal-case tabular-nums text-yellow",style:{"white-space":"normal","text-align":"right","overflow-wrap":"anywhere"}')
   s = replaceOnce(s, '__name:"SessionTab",setup(e){const t=Ne(),n=U(', '__name:"SessionTab",setup(e){const t=Ne(),personalNow=personalClock(te,Ve),n=U(')
   s = replaceOnce(s, 'null,8,["values"])):V("",!0)])]),n.value.length?', 'null,8,["values"])):V("",!0)]),boundCard(c,t.kina,personalNow.value)]),n.value.length?')
+  s = replaceOnce(s, 'h("div",O0,"measuring…")', 'h("div",O0,"Calculating…")')
+  s = replaceOnce(s, 'h("div",N0,"—")', 'h("div",N0,"Calculating…")')
+  s = replaceOnce(s, 'N0={key:2,class:"text-3xl font-semibold text-yellow"}', 'N0={key:2,class:"text-lg font-semibold text-yellow"}')
   // Display the base and local extension separately; the base's real version remains 0.2.64.
   s = replaceOnce(s, '"v"+$(m(t).update.current)', '"v"+$(m(t).update.current)+" + Personal"')
   return s
@@ -101,7 +105,7 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
       directories: { output: join(ROOT, 'build/personal-installer'), buildResources: join(ROOT, 'app/build') },
       files: ['**/*'], extraResources: [{ from: join(base, 'resources/sidecar'), to: 'sidecar' }], asar: true, electronLanguages: ['en-US'],
       win: { target: ['nsis'], icon: join(ROOT, 'app/build/icon.ico') },
-      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.1.1.exe' },
+      nsis: { oneClick: true, perMachine: false, deleteAppDataOnUninstall: false, shortcutName: 'Nyerk', artifactName: 'Nyerk-Personal-0.2.64-1.2.0.exe' },
       publish: { provider: 'generic', url: 'https://nyerk.app/updates/', channel: 'latest' },
     } })
   }
